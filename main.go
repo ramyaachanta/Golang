@@ -54,5 +54,5 @@ func main() {
 	r.GET("/orders", getOrders)
 
 	fmt.Println("Server running on port 8000...")
-	r.Run(":8000")
+	r.Run("0.0.0.0:8000")
 }
