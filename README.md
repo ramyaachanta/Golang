@@ -28,7 +28,7 @@
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/your-username/trade-orders-api.git
-cd trade-orders-api
+cd TradeOrder
 ```
 
 ### 2. Set Up PostgreSQL
