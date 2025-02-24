@@ -15,8 +15,10 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USER }}" --password-stdin
 
-      - name: Pull Docker Image
-        run: docker pull "${{ secrets.DOCKERHUB_USER }}"/golang-orders:latest
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t "${{ secrets.DOCKERHUB_USER }}/golang-orders:latest" .
+          docker push "${{ secrets.DOCKERHUB_USER }}/golang-orders:latest"
 
       - name: Deploy Application on EC2
         uses: appleboy/ssh-action@master
@@ -30,13 +32,17 @@ jobs:
             docker rm golang-orders || true
             docker stop postgres || true
             docker rm postgres || true
-            
+
+            echo "🔹 Creating Docker network..."
+            docker network create mynetwork || true
+
             echo "🔹 Pulling latest PostgreSQL image..."
             docker pull postgres
-            
+
             echo "🔹 Starting PostgreSQL container..."
             docker run -d \
               --name postgres \
+              --network mynetwork \
               -e POSTGRES_USER=postgres \
               -e POSTGRES_PASSWORD=Cse@40668 \
               -e POSTGRES_DB=orders_db \
@@ -44,13 +50,14 @@ jobs:
               postgres
 
             echo "🔹 Pulling latest Golang API image..."
-            docker pull "${{ secrets.DOCKERHUB_USER }}"/golang-orders:latest
+            docker pull "${{ secrets.DOCKERHUB_USER }}/golang-orders:latest"
 
             echo "🔹 Starting Golang Orders API container..."
             docker run -d \
               --name golang-orders \
+              --network mynetwork \
               -p 8000:8000 \
               --env DATABASE_URL="host=postgres user=postgres password=Cse@40668 dbname=orders_db port=5432 sslmode=disable" \
-              "${{ secrets.DOCKERHUB_USER }}"/golang-orders:latest
+              "${{ secrets.DOCKERHUB_USER }}/golang-orders:latest"
 
             echo "✅ Deployment completed successfully!"
