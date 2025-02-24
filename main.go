@@ -23,7 +23,7 @@ var db *gorm.DB
 var err error
 
 func init() {
-	dsn := "host=host.docker.internal user=postgres password=Cse@40668 dbname=orders_db port=5432 sslmode=disable"
+	dsn := "host=postgres user=postgres password=Cse@40668 dbname=orders_db port=5432 sslmode=disable"
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
