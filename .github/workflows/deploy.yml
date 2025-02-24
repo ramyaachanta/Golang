@@ -18,14 +18,39 @@ jobs:
       - name: Pull Docker Image
         run: docker pull "${{ secrets.DOCKERHUB_USER }}"/golang-orders:latest
 
-      - name: Run Container on EC2
+      - name: Deploy Application on EC2
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.AWS_HOST }}
           username: ubuntu
           key: ${{ secrets.AWS_SSH_KEY }}
           script: |
+            echo "🔹 Stopping and removing old containers..."
             docker stop golang-orders || true
             docker rm golang-orders || true
+            docker stop postgres || true
+            docker rm postgres || true
+            
+            echo "🔹 Pulling latest PostgreSQL image..."
+            docker pull postgres
+            
+            echo "🔹 Starting PostgreSQL container..."
+            docker run -d \
+              --name postgres \
+              -e POSTGRES_USER=postgres \
+              -e POSTGRES_PASSWORD=Cse@40668 \
+              -e POSTGRES_DB=orders_db \
+              -p 5432:5432 \
+              postgres
+
+            echo "🔹 Pulling latest Golang API image..."
             docker pull "${{ secrets.DOCKERHUB_USER }}"/golang-orders:latest
-            docker run -d -p 8000:8000 --name golang-orders "${{ secrets.DOCKERHUB_USER }}"/golang-orders:latest
+
+            echo "🔹 Starting Golang Orders API container..."
+            docker run -d \
+              --name golang-orders \
+              -p 8000:8000 \
+              --env DATABASE_URL="host=postgres user=postgres password=Cse@40668 dbname=orders_db port=5432 sslmode=disable" \
+              "${{ secrets.DOCKERHUB_USER }}"/golang-orders:latest
+
+            echo "✅ Deployment completed successfully!"
