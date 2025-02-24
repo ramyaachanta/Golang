@@ -16,7 +16,7 @@ jobs:
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USER }}" --password-stdin
 
       - name: Pull Docker Image
-        run: docker pull myusername/golang-orders:latest
+        run: docker pull "${{ secrets.DOCKERHUB_USER }}"/golang-orders:latest
 
       - name: Run Container on EC2
         uses: appleboy/ssh-action@master
@@ -27,5 +27,5 @@ jobs:
           script: |
             docker stop golang-orders || true
             docker rm golang-orders || true
-            docker pull myusername/golang-orders:latest
-            docker run -d -p 8000:8000 --name golang-orders myusername/golang-orders:latest
+            docker pull "${{ secrets.DOCKERHUB_USER }}"/golang-orders:latest
+            docker run -d -p 8000:8000 --name golang-orders "${{ secrets.DOCKERHUB_USER }}"/golang-orders:latest
